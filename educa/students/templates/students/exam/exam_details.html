@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% block title %}
+    {{ exam.title }} - Exam Details
+{% endblock %}
+{% block content %}
+
+    {% if in_progress_attempt %}
+        <div class="alert alert-warning">
+            <strong>Warning!</strong> You have an exam in progress that has not been submitted.
+            Please return to the exam and click "Submit Exam" to finalize your submission.
+            <a href="{% url 'student_take_exam' course_id exam_id %}" class="btn btn-primary">Return to Exam</a>
+        </div>
+    {% endif %}
+
+    <div class="module">
+        <h2>{{ exam.title }}</h2>
+
+        <div class="exam-details">
+            {% if exam.description %}
+                <div class="exam-description">
+                    <p>{{ exam.description }}</p>
+                </div>
+            {% endif %}
+
+            <div class="exam-info">
+                <h3>Exam Information</h3>
+                <table class="table">
+                    {% if exam.duration %}
+                        <tr>
+                            <th>Duration:</th>
+                            <td>{{ exam.duration }}</td>
+                        </tr>
+                    {% endif %}
+
+                    {% if exam.start_time %}
+                        <tr>
+                            <th>Start Time:</th>
+                            <td>{{ exam.start_time|date:"d-m-Y H:i" }}</td>
+                        </tr>
+                    {% endif %}
+
+                    {% if exam.end_time %}
+                        <tr>
+                            <th>End Time:</th>
+                            <td>{{ exam.end_time|date:"d-m-Y H:i" }}</td>
+                        </tr>
+                    {% endif %}
+
+                    {% if exam.passing_score %}
+                        <tr>
+                            <th>Passing Score:</th>
+                            <td>{{ exam.passing_score }}</td>
+                        </tr>
+                    {% endif %}
+
+                    {% if exam.total_score %}
+                        <tr>
+                            <th>Total Score:</th>
+                            <td>{{ exam.total_score }}</td>
+                        </tr>
+                    {% endif %}
+
+                    {% if exam.attempts_allowed %}
+                        <tr>
+                            <th>Attempts Allowed:</th>
+                            <td>{{ exam.attempts_allowed }}</td>
+                        </tr>
+                    {% endif %}
+                </table>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <a href="{% url 'student_exam_list' exam.course.id %}" class="btn btn-secondary"
+               style="height: fit-content">Back to Exam List</a>
+            {% if can_take_exam and not in_progress_attempt %}
+                <a href="{% url 'student_take_exam' course_id exam_id %}" class="btn btn-primary">Start Exam</a>
+            {% elif has_taken_exam and not results_available %}
+                <span class="alert alert-info">You have already completed this exam.</span>
+            {% elif has_taken_exam and results_available %}
+                <a href="{% url 'student_exam_result' course_id exam_id attempt.id %}" class="btn btn-primary">View
+                    Results</a>
+            {% elif in_progress_attempt and can_take_exam %}
+                <a href="{% url 'student_take_exam' course_id exam_id %}" class="btn btn-warning">Continue Exam</a>
+            {% elif not is_exam_active %}
+                <span class="alert alert-warning">This exam is not currently active.</span>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

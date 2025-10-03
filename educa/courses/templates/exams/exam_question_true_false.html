@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}
+    {% if form.instance.id %}Edit{% else %}Create{% endif %} True/False Question
+{% endblock %}
+{% block content %}
+    <h2>{% if form.instance.id %}Edit{% else %}Create{% endif %} True/False Question</h2>
+    <form method="POST">
+        {% csrf_token %}
+        <div class="question-section">
+            {{ form.as_p }}
+        </div>
+{#        <div class="true-false-container">#}
+{#            <p class="help-text">Is this statement True or False?</p>#}
+{#                <div class="true-false-option">#}
+{#                    <label class="toggle-switch" for="{{ form.is_true.id_for_label }}">#}
+{#                        {{ form.is_true }}#}
+{#                        <span class="slider"></span>#}
+{#                    </label>#}
+{#                </div>#}
+{#        </div>#}
+        <div class="form-actions">
+            <input type="submit" class="btn btn-primary" value="Save">
+            <a href="{% url 'exam_add_questions' course_id exam_id %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+{% endblock %}

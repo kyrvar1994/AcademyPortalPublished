@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block title %}
+    Enroll in Courses
+{% endblock %}
+{% block content %}
+    <h1>Enroll in Courses</h1>
+
+    <div class="module">
+        <h2>Available Courses for {{ current_academic_year }}</h2>
+
+        {% if form.courses.field.queryset.exists  or subjects_with_courses %}
+            <div class="enrollment-container">
+                <div class="enrollment-info">
+                    <p class="academic-year-info">
+                        <i class="fa fa-calendar-alt"></i>
+                        Academic Year:  <strong> {{ current_academic_year }}</strong>
+                    </p>
+                    <p class="enrollment-instructions">
+                        <i class="fa fa-info-circle"></i>
+                        Please select the courses you want to enroll in for the current academic year.<br>
+                        You can select multiple courses by checking the boxes next to each course name.<br>
+                        Courses that you are already enrolled in are grayed out and cannot be selected.
+                    </p>
+                </div>
+
+                <form method="post" class="enrollment-form">
+                    {% csrf_token %}
+                    {{ form.academic_year }}
+
+                    <div class="course-selection">
+                        {% for subject, courses in subjects_with_courses.items %}
+                            <div class="subject-group">
+                                <h3><i class="fas fa-book"></i> {{ subject.title }}</h3>
+
+                                <div class="course-checkboxes">
+                                    {% for course_info in courses %}
+                                        <div class="course-checkbox {% if course_info.unavailable %}unavailable{% endif %}">
+                                            {% if course_info.unavailable %}
+                                                <input type="checkbox" disabled id="id_courses_{{ course_info.course.id }}" name="courses" value="{{ course_info.course.id }}" class="disabled-course">
+                                                <label for="id_courses_{{ course_info.course.id }}" class="disabled-course">{{ course_info.course.title }} <span class="course-price">{{ course_info.course.price }}€</span>
+                                                </label>
+                                            {% else %}
+                                                <input type="checkbox" id="id_courses_{{ course_info.course.id }}" name="courses" value="{{ course_info.course.id }}">
+                                                <label for="id_courses_{{ course_info.course.id }}">{{ course_info.course.title }} <span class="course-price">{{ course_info.course.price }}€</span></label>
+                                            {% endif %}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-shopping-cart"></i> Proceed to payment
+                        </button>
+                    </div>
+                </form>
+            </div>
+        {% else %}
+            <div class="enrollment-message">
+                <i class="fas fa-info-circle"></i>
+                <p>You are already enrolled in all available courses for this academic year.</p>
+                <a href="{% url 'student_course_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i>Back to courses
+                </a>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

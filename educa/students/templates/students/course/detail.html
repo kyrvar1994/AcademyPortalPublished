@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}
+    {{ object.title }}
+{% endblock %}
+{% block content %}
+    <h1>
+        {{ module.title }}
+    </h1>
+    <div class="contents">
+        <h3>Modules</h3>
+        <ul id="modules">
+            {% for m in object.modules.all %}
+                <li data-id="{{ m.id }}" {% if m == module %}class="selected"{% endif %}>
+                    <a href="{% url 'student_course_detail_module' object.id m.id %}">
+                    <span>
+                        Module <span class="order">{{ m.order|add:1 }}</span>
+                    </span>
+                        <br>
+                        {{ m.title }}
+                    </a>
+                </li>
+            {% empty %}
+                <li>No modules yet.</li>
+            {% endfor %}
+        </ul>
+        <p><a href="{% url 'student_course_list' %}">Return to my courses</a></p>
+    </div>
+    <div class="module" style="overflow: auto;" id="course_detail">
+        {% if module.contents.exists %}
+            {% for content in module.contents.all %}
+                {% with item=content.item %}
+                    <h2>{{ item.title }}</h2>
+                    {{ item.render }}
+                {% endwith %}
+            {% endfor %}
+        {% else %}
+            <h2>Contents</h2>
+            <p>No contents yet.</p>
+        {% endif %}
+        <div id="exercises">
+            <h2>Exercises</h2>
+            {% if available_exercises %}
+                <ul>
+                    {% for exercise in available_exercises %}
+                        <li>
+                            <a href="{% url 'exercise_detail' course.id module.id exercise.id %}">{{ exercise.title }}</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No exercises yet.</p>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('#course_detail a:not(#exercises a)').forEach(function (el) {
+                el.classList.add('btn', 'btn-primary', 'btn-sm');
+            });
+        });
+
+    </script>
+{% endblock %}

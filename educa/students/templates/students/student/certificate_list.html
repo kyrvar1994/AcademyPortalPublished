@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}
+	My Certificates
+{% endblock %}
+{% block content %}
+	<h1>My Certificates</h1>
+    <div class="box" style="flex-direction: column;">
+        <h2>Course Completion Certificates</h2>
+
+        {% if completions %}
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Course</th>
+                        <th>Academic Year</th>
+                        <th>Completion Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for completion in completions %}
+                    	<tr>
+                            <td>{{ completion.enrollment.course.title }}</td>
+                            <td>{{ completion.enrollment.academic_year.name }}</td>
+                            <td>{{ completion.completed_date|date:"d/m/Y" }}</td>
+                            <td>
+                                <a href="{% url 'student_certificate' completion.enrollment.course.id completion.id %}"
+                                   class="button">
+                                    <i class="fas fa-certificate"></i> View Certificate
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>You haven't completed any courses yet.</p>
+        {% endif %}
+    </div>
+{% endblock %}

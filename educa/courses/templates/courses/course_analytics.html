@@ -1,0 +1,387 @@
+{% extends 'base.html' %}
+{% load course %}
+{% block title %}
+    Course Analytics: {{ course.title }}
+{% endblock %}
+{% block content %}
+    <div class="analytics-container">
+        <div class="analytics-header">
+            <h1>Course Analytics: {{ course.title }}</h1>
+
+
+            <div class="filter-container">
+                <form method="get" id="year-filter-form">
+                    <div class="form-group">
+                        <select name="academic_year" id="academic_year" class="form-control"
+                                onchange="this.form.submit()">
+                            <option value="">All Years</option>
+                            {% for year in academic_years %}
+                                <option value="{{ year.id }}" {% if selected_year.id == year.id %}selected{% endif %}>
+                                    {{ year.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="metrics-summary">
+            <div class="metric-card">
+                <div class="metric-icon">
+                    <i class="fas fa-user-graduate"></i>
+                </div>
+                <div class="metric-content">
+                    <p>Total Students</p>
+                    <h3>{{ total_enrollments }}</h3>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="metric-content">
+                    <p>Completed By</p>
+                    <h3>{{ completion_rate|floatformat:1 }}%</h3>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-icon">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+                <div class="metric-content">
+                    <p>Exams</p>
+                    <h3>{{ exams_count }}</h3>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-icon">
+                    <i class="fas fa-pen"></i>
+                </div>
+                <div class="metric-content">
+                    <p>Exam Attempts</p>
+                    <h3>{{ exam_attempts_count }}</h3>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="metric-content">
+                    <p>Average Score</p>
+                    <h3>{{ average_score|floatformat:1 }}%</h3>
+                </div>
+            </div>
+        </div>
+
+        {% if stats_by_year %}
+            <div class="comparison-section">
+                <h2>Performance by Academic Year</h2>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th>Academic Year</th>
+                            <th>Students</th>
+                            <th>Exams</th>
+                            <th>Average Score</th>
+                            <th>Completed Courses</th>
+                            <th>Completion Rate</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for year, stats in stats_by_year.items %}
+                            <tr {% if selected_year.id == year.id %}class="highlight-row"{% endif %}>
+                                <td>{{ year.name }}</td>
+                                <td>{{ stats.total_enrollments }}</td>
+                                <td>{{ stats.total_exams_taken }}</td>
+                                <td>{{ stats.average_score|floatformat:1 }}%</td>
+                                <td>{{ stats.completed_courses }}</td>
+                                <td>
+                                    {% if stats.total_enrollments > 0 %}
+                                        {{ stats.completion_rate|floatformat:0 }}%
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        {% else %}
+            <div class="no-data-message">
+                <p>No data available.</p>
+            </div>
+        {% endif %}
+
+        {% if course_exams %}
+            <div class="exam-breakdown-section">
+                <h2>Exam Performance Breakdown</h2>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th>Exam</th>
+                            <th>Attempts</th>
+                            <th>Average Score</th>
+                            <th>Pass Rate</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for exam in course_exams %}
+                            {% if exam.id in exam_stats %}
+                                <tr>
+                                    <td>{{ exam.title }}</td>
+                                    <td>{{ exam_stats|get_item:exam.id|get_item:'attempts' }}</td>
+                                    <td>{{ exam_stats|get_item:exam.id|get_item:'avg_percent'|floatformat:1 }}%</td>
+                                    <td>{{ exam_stats|get_item:exam.id|get_item:'pass_rate'|floatformat:1 }}%</td>
+                                    <td>
+                                        <a href="{% url 'exam_analytics' course.id exam.id %}"
+                                           class="btn btn-sm btn-primary" target="_blank">
+                                            View Details
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        {% endif %}
+
+        {% if score_distribution %}
+            <div class="student-distribution-section">
+                <h2>Student Performance Distribution</h2>
+
+                <div class="distribution-cards">
+                    <div class="distribution-card">
+                        <h3>Score Distribution</h3>
+                        <div class="score-distribution">
+                            <div class="distribution-chart">
+                                {% for range, count in score_distribution.items %}
+                                    <div class="distribution-bar" data-count="{{ count }}">
+                                        <div class="bar-label">{{ range }}</div>
+                                        <div class="bar" style="height: 0px;"></div>
+                                        <span class="bar-value">{{ count }}</span>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        {% if student_data %}
+            <div class="student-performance-table">
+                <h2>Student Performance Details</h2>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th></th>
+                            <th>Student</th>
+                            <th>Enrollment Date</th>
+                            <th>Exams Taken</th>
+                            <th>Average Score</th>
+                            <th>Status</th>
+                            <th>Completion Date</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for data in student_data %}
+                            <tr>
+                                <td>
+                                    <button class="toggle-exams-btn" data-student-id="{{ data.student.id }}">
+                                        <i class="fas fa-chevron-down"></i>
+                                    </button>
+                                </td>
+                                <td>{{ data.student.username }}</td>
+                                <td>{{ data.enrollment.enrollment_date|date:"F j, Y" }}</td>
+                                <td>{{ data.exams_taken }}</td>
+                                <td>{{ data.avg_score|floatformat:1 }}%</td>
+                                <td>
+                                    {% if data.status == 'completed' %}
+                                        <span class="status-badge completed">Complete</span>
+                                    {% elif data.has_failed_final_exam and data.is_avg_below_50 %}
+                                        <span class="status-badge failed">Failed</span>
+                                    {% else %}
+                                        <span class="status-badge in-progress">In Progress</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if data.is_completed %}
+                                        {{ data.completion_date|date:"F j, Y" }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                            </tr>
+
+                            <tr class="exam-details-row" id="exam-details-{{ data.student.id }}" style="display: none;">
+                                <td colspan="7">
+                                    {% if data.exam_details %}
+                                        <div class="exam-details-container">
+                                            <h4>Exam Details</h4>
+                                            <table class="table table-sm exam-details-table">
+                                                <thead>
+                                                <tr>
+                                                    <th>Exam</th>
+                                                    <th>Date</th>
+                                                    <th>Score</th>
+                                                    <th>Percentage</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+                                                {% for exam in data.exam_details %}
+                                                    <tr class="{% if exam.has_passed %}passed{% else %}failed{% endif %}">
+                                                        <td>
+                                                            <a href="{% url 'student_exam_result' course.id exam.exam_id exam.attempt_id  %}"
+                                                               target="_blank">
+                                                                {{ exam.exam_title }}
+                                                            </a>
+                                                        </td>
+                                                        <td>{{ exam.attempt_date|date:"F j, Y" }}</td>
+                                                        <td>{{ exam.raw_score|floatformat:1 }}/{{ exam.total_score }}
+                                                        </td>
+                                                        <td>{{ exam.percentage_score|floatformat:1 }}%</td>
+                                                        <td>
+                                                            {% if exam.has_passed %}
+                                                                <span class="status-badge passed">Passed</span>
+                                                            {% else %}
+                                                                <span class="status-badge failed">Failed</span>
+                                                            {% endif %}
+                                                        </td>
+                                                    </tr>
+                                                {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    {% else %}
+                                        <p>No exam attempts found for this student.</p>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+    {% block include_js %}
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    {% endblock %}
+{% endblock %}
+<script>
+{% block domready %}
+        {{ block.super }}
+        console.log('🔍 SCRIPT: course_analytics.js starting execution');
+
+        const scriptTags = document.querySelectorAll('script');
+        console.log(`Found ${scriptTags.length} script tags on the page`);
+
+        const bars = document.querySelectorAll('.distribution-bar');
+
+        let totalCount = 0;
+        bars.forEach(bar => {
+        totalCount += parseInt(bar.getAttribute('data-count') || 0);
+        });
+
+        bars.forEach(bar => {
+        const count = parseInt(bar.getAttribute('data-count') || 0);
+        const barElement = bar.querySelector('.bar');
+        const valueElement = bar.querySelector('.bar-value');
+
+        if (count >0 && totalCount > 0) {
+        const percent = (count / totalCount) * 100;
+        const height = 20 + (percent * 1.8);
+
+        barElement.style.height = `${height}px`;
+        valueElement.textContent = `${count} (${percent.toFixed(1)}%)`;
+        } else {
+        barElement.classList.add('empty-bar');
+        valueElement.textContent = '0 (0%)';
+        }
+        });
+
+        const toggleButtons = document.querySelectorAll('.toggle-exams-btn');
+
+        toggleButtons.forEach((button, index) => {
+        console.log(`Setting up click listener for button ${index} with student ID:
+        ${button.getAttribute('data-student-id')}`);
+
+        button.addEventListener('click', function (event) {
+        event.stopPropagation();
+        console.log(`Click event triggered on button element:`, this);
+        console.log(`Event target:`, event.target);
+        console.log(`Current target:`, event.currentTarget);
+        console.log('Button clicked for student ID:', this.getAttribute('data-student-id'));
+
+        const studentId = this.getAttribute('data-student-id');
+        const detailsRow = document.getElementById(`exam-details-${studentId}`);
+        console.log(`Details row found:`, detailsRow);
+
+        const icon = this.querySelector('i');
+
+        const isHidden = detailsRow.style.display === 'none' || getComputedStyle(detailsRow).display === 'none';
+        console.log(`Is row hidden? ${isHidden}`);
+
+        if (isHidden) {
+        detailsRow.style.display = 'table-row';
+        icon.classList.remove('fa-chevron-down');
+        icon.classList.add('fa-chevron-up');
+        } else {
+        detailsRow.style.display = 'none';
+        icon.classList.remove('fa-chevron-up');
+        icon.classList.add('fa-chevron-down');
+        }
+        });
+        });
+
+        const tooltips = document.querySelectorAll('.feedback-tooltip');
+        tooltips.forEach(tooltip => {
+        tooltip.addEventListener('mouseenter', function () {
+        const title = this.getAttribute('title');
+        if (title) {
+        this.setAttribute('data-original-title', title);
+        this.removeAttribute('title');
+
+        const tooltipEl = document.createElement('div');
+        tooltipEl.className = 'custom-tooltip';
+        tooltipEl.textContent = title;
+        document.body.appendChild(tooltipEl);
+
+        const rect = this.getBoundingClientRect();
+        tooltipEl.style.top = (rect.top - tooltipEl.offsetHeight - 10) + 'px';
+        tooltipEl.style.left = (rect.left + rect.width / 2 - tooltipEl.offsetWidth / 2) + 'px';
+        tooltipEl.style.opacity = 1;
+
+        this.tooltipEl = tooltipEl;
+        }
+        });
+
+        tooltip.addEventListener('mouseleave', function () {
+        if (this.tooltipEl) {
+        document.body.removeChild(this.tooltipEl);
+        this.tooltipEl = null;
+
+        const originalTitle = this.getAttribute('data-original-title');
+        if (originalTitle) {
+        this.setAttribute('title', originalTitle);
+        this.removeAttribute('data-original-title');
+        }
+        }
+        });
+        });
+    {% endblock %}
+</script>

@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block title %}
+    Course Completion Certificate
+{% endblock %}
+{% block content %}
+    <div class="certificate">
+        <div class="certificate-watermark">CERTIFIED</div>
+        <div class="certificate-header">
+            <div class="row">
+                <div class="col-md-12 text-center">
+                    <div class="logo-placeholder">
+                        <i class="fas fa-graduation-cap fa-3x"></i>
+                        <h1>Certificate of Completion</h1>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="certificate-body">
+            <div class="row">
+                <div class="col-md-12 text-center">
+                    <p class="certificate-text">This is to certify that</p>
+                    <h2 class="student-name">{{ completion.enrollment.student.get_full_name }}</h2>
+                    <p class="certificate-text">has successfully completed the course</p>
+                    <h3 class="course-title">{{ completion.enrollment.course.title }}</h3>
+                    <p class="certificate-text">in the academic year</p>
+                    <h4 class="academic-year">{{ completion.enrollment.academic_year.name }}</h4>
+                    <p class="certificate-date">on {{ completion.completed_date|date:"F d, Y" }}</p>
+
+                    <div class="signature-container">
+                        <div class="signature">
+                            <div class="signature-line"></div>
+                            <p>Course Instructor</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="certificate-footer">
+            <div class="certificate-id">Certificate ID: {{ completion.id }}</div>
+            <div class="verification-text">
+                <p>This certificate verifies that the above-named person has successfully completed all requirements for
+                    the
+                    course.</p>
+            </div>
+        </div>
+
+        <div class="no-print text-center mt-4">
+            <button onclick="printCertificate()" class="btn btn-primary">
+                <i class="fas fa-print"></i> Print/Save as PDF
+            </button>
+            {% if not request.user.is_staff %}
+                <a href="{% url 'student_certificates' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back
+                </a>
+            {% endif %}
+
+
+            <div class="mt-2 text-muted">
+                <small>
+                    <i class="fas fa-info-circle"></i>
+                    To save as PDF, select "Save as PDF" in the printer destination dropdown when the print dialog
+                    appears.
+                </small>
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+
+    <script>
+        function printCertificate() {
+            window.print();
+        }
+    </script>
+{% endblock %}

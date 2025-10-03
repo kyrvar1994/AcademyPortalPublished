@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% block title %}
+    Exam Results
+{% endblock %}
+{% block content %}
+    <div class="module">
+        <h1>Exam Results</h1>
+
+        <div class="exam-status-card">
+            <h3>Exam: {{ exam.title }}</h3>
+            <p><strong>Student: </strong>{{ attempt.student.first_name }} {{ attempt.student.last_name }}</p>
+
+            <div class="exam-progress">
+                <div class="progress-bar">
+                    <div class="progress" style="width: {{ percentage }}%"></div>
+                </div>
+                <div class="progress-text">
+                    <strong>Score: </strong>{{ attempt.score|default:0 }} out of {{ exam.total_score }}
+                    ({{ percentage|floatformat:1 }}%)
+                </div>
+            </div>
+        </div>
+
+        <h3 class="section-header">Your Answers</h3>
+
+        <div class="student-answers">
+            {% for answer in attempt.answers.all %}
+                <div class="question-answer-container">
+                    <div class="question">
+                        <h4>Question {{ forloop.counter }}:</h4>
+                        <p>{{ answer.question.text }}</p>
+                        <p class="question-score">Max score: {{ answer.question.score }}</p>
+                    </div>
+
+                    <div class="student-answer">
+                        <h5>Your Answer:</h5>
+                        {% if answer.question.question_type == 'MCQ' %}
+                            <p>Selected: {{ answer.selected_answer.text }}</p>
+                            <p>Status:
+                                {% if answer.is_correct %}
+                                    <span class="badge badge-success">Correct</span>
+                                {% else %}
+                                    <span class="badge badge-danger">Wrong</span>
+                                {% endif %}
+                            </p>
+                            <p><strong>Score: </strong>{{ answer.awarded_score|default:0 }}</p>
+                            {% if answer.feedback %}
+                                <div class="feedback-section">
+                                    <h6>Feedback:</h6>
+                                    <p>{{ answer.feedback }}</p>
+                                </div>
+                            {% endif %}
+                        {% elif answer.question.question_type == 'TF' %}
+                            <p>Selected: {{ answer.boolean_answer|yesno:"True,False" }}</p>
+                            <p>Status:
+                                {% if answer.is_correct %}
+                                    <span class="badge badge-success">Correct</span>
+                                {% else %}
+                                    <span class="badge badge-danger">Wrong</span>
+                                {% endif %}
+                            </p>
+                            <p><strong>Score: </strong>{{ answer.awarded_score|default:0 }}</p>
+                            {% if answer.feedback %}
+                                <div class="feedback-section">
+                                    <h6>Feedback:</h6>
+                                    <p>{{ answer.feedback }}</p>
+                                </div>
+                            {% endif %}
+                        {% elif answer.question.question_type == 'ESSAY' %}
+                            <div class="essay-response">
+                                <p>{{ answer.essay_answer|linebreaks }}</p>
+                                {% if answer.uploaded_file %}
+                                    <p><strong>Uploaded file:</strong> <a href="{{ answer.uploaded_file.url }}"
+                                                                          target="_blank">{{ answer.uploaded_file.name }}</a>
+                                    </p>
+                                {% endif %}
+                            </div>
+                            <p><strong>Score: </strong>{{ answer.awarded_score|default:0 }}</p>
+                            {% if answer.feedback %}
+                                <div class="feedback-section">
+                                    <h6>Feedback:</h6>
+                                    <p>{{ answer.feedback }}</p>
+                                </div>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            {% empty %}
+                <div class="no-data-message">
+                    <p>No answers were submitted for this exam.</p>
+                </div>
+            {% endfor %}
+        </div>
+
+        {% if attempt.instructor_feedback %}
+            <h3 class="section-header">Overall Feedback</h3>
+            <div class="exam-status-card">
+                <p>{{ attempt.instructor_feedback|linebreaks }}</p>
+            </div>
+        {% endif %}
+
+        <div class="form-actions">
+            <a href="{% url 'student_exam_detail' course_id exam_id %}" class="btn btn-primary">Return</a>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}
+    Confirm deletion
+{% endblock %}
+{% block content %}
+    <h1>Are you sure you want to delete "{{ object.title }}"?</h1>
+    <div>
+        <form method="post">
+            {% csrf_token %}
+            <input type="submit" value="Confirm" style="float: none" class="btn btn-primary">
+            <a class="btn btn-secondary" href="{% url 'module_content_list' course_id  module_id %}">Cancel</a>
+        </form>
+    </div>
+{% endblock %}

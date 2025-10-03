@@ -1,0 +1,190 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+    <div class="module">
+        <h2>Course Completions Management Dashboard</h2>
+        <form method="get" class="filter-form">
+            <label>Student:</label>
+            <input type="text" name="student" value="{{ request.GET.student }}">
+
+            <label> Course:</label>
+            <input type="text" name="course" value="{{ request.GET.course }}">
+
+            <label> Academic Year:</label>
+            <select name="academic_year">
+                <option value="">All</option>
+                {% for year in academic_years %}
+                    <option value="{{ year.id }}"
+                            {% if request.GET.academic_year == year.id|stringformat:"i" %}selected{% endif %}>
+                        {{ year.name }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <label> Completion Status</label>
+            <select name="completion_status">
+                <option value="">All</option>
+                {% for value, label in completion_statuses %}
+                    <option value="{{ value }}" {% if request.GET.completion_status == value %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+
+    <div>
+        <table class="table">
+            <thead>
+            <tr>
+                <th>Student</th>
+                <th>Course</th>
+                <th>Academic Year</th>
+                <th>Enrollment Date</th>
+                <th>Status</th>
+                <th>Completion Date</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for enrollment in enrollments %}
+                <tr>
+                    <td>{{ enrollment.student.username }}</td>
+                    <td>{{ enrollment.course.title }}</td>
+                    <td>{{ enrollment.academic_year.name }}</td>
+                    <td>{{ enrollment.enrollment_date|date:"d/m/Y" }}</td>
+                    <td>
+                        {% if enrollment.completion %}
+                            <span class="badge badge-success">Completed</span>
+                        {% else %}
+                            <span class="badge in-progress">In Progress</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if enrollment.completion %}
+                            {{ enrollment.completion.completed_date|date:"d/m/Y" }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if enrollment.completion %}
+                            <a href="{% url 'revoke_completion' enrollment.course.id enrollment.completion.id %}"
+                               onclick="return confirm('Are you sure you want to revoke this completion?')"
+                               class="deletelink">
+                                Revoke
+                            </a>
+                            {% if enrollment.completion.certificate_issued %}
+                                | <a href="{% url 'admin_certificate' enrollment.course.id enrollment.completion.id %}" class="viewlink" target="_blank">
+                                <i class="fas fa-certificate"></i> View Certificate
+                                </a>
+                            {% endif %}
+                        {% else %}
+                            <a href="{% url 'mark_course_completed' enrollment.course.id enrollment.id %}"
+                               onclick="return confirm('Are you sure you want to mark this course as completed?')"
+                               class="addlink">
+                                Mark as Completed
+                            </a>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="7">No records found</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+        {% if paginated %}
+            <div class="pagination">
+                <span class="step-links">
+                    {% if page_obj.has_previous %}
+                        <a href="?page=
+
+                                {{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Previous</a>
+                    {% endif %}
+
+                    <span class="current">
+                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                    </span>
+
+                    {% if page_obj.has_next %}
+                        <a href="?page=
+
+                                {{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Next</a>
+                    {% endif %}
+                </span>
+            </div>
+        {% endif %}
+
+        <div class="actions">
+            <a href="{% url 'admin:index' %}" class="btn btn-primary">Back</a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('DOM ready');
+            const lastFocusedField = localStorage.getItem('lastFocusedField');
+            const lastCursorPosition = localStorage.getItem('lastCursorPosition');
+
+            if (lastFocusedField) {
+                const field = document.querySelector(`[name="${lastFocusedField}"]`);
+
+                if (field) {
+                    field.focus();
+
+                    if (field.type === 'text' && lastCursorPosition) {
+                        field.setSelectionRange(parseInt(lastCursorPosition),
+                            parseInt(lastCursorPosition));
+                    }
+                }
+
+                localStorage.removeItem('lastFocusedField');
+                localStorage.removeItem('lastCursorPosition');
+            }
+        });
+
+        const filterInputs = document.querySelectorAll('.filter-form input[type=text], .filter-form select');
+
+        filterInputs.forEach(input => {
+            input.addEventListener('focus', function () {
+                localStorage.setItem('lastFocusedField', this.name);
+
+                if (this.type === 'text') {
+                    this.addEventListener('click', function () {
+                        localStorage.setItem('lastCursorPosition', this.selectionStart);
+                    });
+
+                    this.addEventListener('keyup', function () {
+                        localStorage.setItem('lastCursorPosition', this.selectionStart);
+                    });
+                }
+            });
+
+            input.addEventListener('change', function () {
+                localStorage.setItem('lastFocusedField', this.name);
+
+                if (this.type === 'text') {
+                    localStorage.setItem('lastCursorPosition', this.selectionStart);
+                }
+                document.querySelector('.filter-form').submit();
+            });
+        });
+
+        const textInputs = document.querySelectorAll('.filter-form input[type=text]');
+        let typingTimer;
+
+        textInputs.forEach(input => {
+            input.addEventListener('input', function () {
+                clearTimeout(typingTimer);
+                typingTimer = setTimeout(() => {
+                    localStorage.setItem('lastFocusedField', this.name);
+                    localStorage.setItem('lastCursorPosition', this.selectionStart);
+                    document.querySelector('.filter-form').submit();
+                }, 500);
+            });
+        });
+    </script>
+{% endblock %}
+

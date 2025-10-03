@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}
+    {% if form.instance.id %}Edit{% else %}Create{% endif %} Multiple Choice Question
+{% endblock %}
+{% block content %}
+    <div class="module">
+        <h2>{% if form.instance.id %}Edit{% else %}Create{% endif %} Multiple Choice Question</h2>
+
+        <form method="post" class="mcq-form">
+            {% csrf_token %}
+
+            <!-- Question section -->
+            <div class="question-section">
+                <div class="form-group">
+                    {{ form.as_p }}
+                </div>
+            </div>
+
+            <!-- Answers section -->
+            <div class="answers-section">
+                <h3>Answer Options</h3>
+                <p class="help-text">Select one answer as correct. You must add 4 options.</p>
+
+                {% if form.non_field_errors %}
+                    <div class="errorlist form-errors">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                {{ formset.management_form }}
+
+                <div class="answer-options">
+                    {% for form in formset %}
+                        <div class="answer-option required">
+                            <div class="hidden">
+                                {{ form.id }}
+                                {{ form.hidden_fields }}
+                            </div>
+                            <div class="answer-header">
+                                <span class="answer-number">Option {{ forloop.counter }}</span>
+                            </div>
+
+                            <div class="answer-content">
+                                <div class="form-group answer-text">
+                                    <label for="{{ form.text.id_for_label }}">Answer text</label>
+                                    {{ form.text }}
+                                    {% if form.text.errors %}
+                                        <div class="errorlist">
+                                            {{ form.text.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="form-group answer-correct">
+                                    {{ form.is_correct }}
+                                    <label for="{{ form.is_correct.id_for_label }}">Correct answer</label>
+                                    {% if form.is_correct.errors %}
+                                        <div class="errorlist">
+                                            {{ form.is_correct.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <input type="submit" value="Save" class="btn btn-primary">
+                <a href="{% url 'exam_add_questions' course_id exam_id %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Ensure only one "correct" checkbox can be selected at a time
+            const correctCheckboxes = document.querySelectorAll('input[type="checkbox"][name$="-is_correct"]');
+
+            correctCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function () {
+                    if (this.checked) {
+                        correctCheckboxes.forEach(cb => {
+                            if (cb !== this) cb.checked = false;
+                        });
+                    }
+                });
+            });
+
+            // Highlight the option with the correct answer
+            function updateCorrectHighlight() {
+                document.querySelectorAll('.answer-option').forEach(option => {
+                    const checkbox = option.querySelector('input[type="checkbox"][name$="-is_correct"]');
+                    if (checkbox && checkbox.checked) {
+                        option.classList.add('correct-answer');
+                    } else {
+                        option.classList.remove('correct-answer');
+                    }
+                });
+            }
+
+            // Initial highlight
+            updateCorrectHighlight();
+
+            // Update highlight when checkboxes change
+            correctCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', updateCorrectHighlight);
+            });
+        });
+    </script>
+{% endblock %}

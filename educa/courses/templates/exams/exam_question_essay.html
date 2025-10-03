@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}
+    Exam Question
+{% endblock %}
+{% block content %}
+    <div class="container">
+        <div class="module">
+            <h2>{% if form.instance.id %}Edit{% else %}Create{% endif %} Question</h2>
+            <form method="POST">
+                {% csrf_token %}
+                <div class="question-section">
+                    {{ form.as_p }}
+                </div>
+                <div class="actions" style="padding: 0">
+                    <input type="submit" value="Save">
+                    <a href="{% url 'exam_add_questions' course_id exam_id%}" class="btn btn-secondary" style="margin-bottom: 14px">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

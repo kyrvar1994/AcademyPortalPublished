@@ -1,0 +1,79 @@
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+
+{% extends "base.html" %}
+{% block title %}My Courses{% endblock %}
+{% block content %}
+    <h1>My courses</h1>
+{#    <p>#}
+{#        <a href="{% url 'course_create' %}" class="btn btn-primary">Create new course</a>#}
+{#    </p>#}
+    {% for subject in subjects %}
+        <div class="subject-group">
+            <h2 style="font-weight: bold">{{ subject.title }}</h2>
+            <div id="course-list-{{ subject.id }}" class="ui-sortable">
+                {% for course in subject.courses.all %}
+                    <div class="course-item" data-id="{{ course.id }}">
+                        <h3><a href="{% url 'student_course_detail' course.pk %}">{{ course.title }}</a></h3>
+                        <p>
+                            <a href="{% url 'course_edit' course.id %}">Edit</a>
+{#                            <a href="{% url 'course_delete' course.id %}">Delete</a>#}
+                            {% if course.modules.count == 0 %}
+                                <a href="{% url 'course_module_update' course.id %}">Add Modules</a>
+                            {% elif course.modules.count > 0 %}
+                                <a href="{% url 'course_module_update' course.id %}">Edit Modules</a>
+                            {% endif %}
+                            {% if course.modules.count > 0 %}
+                                <a href="{% url 'module_content_list' course.id course.modules.first.id %}">
+                                    Manage Content
+                                </a>
+                            {% endif %}
+                            <a href="{% url 'exam_manage' course.id %}">Exams</a>
+                            <a href="{% url 'course_analytics' course.id %}">Course Analytics</a>
+                        </p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endfor %}
+
+
+    <script>
+        console.log(`jQuery version: ${$.fn.jquery}`); // Should output version 3.6.0
+        $(document).ready(function () {
+            $("[id^='course-list-']").each(function () {
+                let listId = $(this).attr('id');
+
+                $("#" + listId).sortable({
+                    update: function (event, ui) {
+                        let order = [];
+                        $("#" + listId + ".course-item").each(function () {
+                            order.push($(this).data("id"));
+                        });
+
+                        $.ajax({
+                            url: "{% url 'course_reorder' %}",
+                            method: "POST",
+                            data: {
+                                order: order,
+                                csrfmiddlewaretoken: "{{csrf_token}}"
+                            },
+                            success: function (response) {
+                                if (response.success) {
+                                    console.log("Order updated successfully");
+                                } else {
+                                    console.error("Failed to update order for " + listId);
+                                }
+                            },
+                            error: function () {
+                                console.error("An error occurred while updating order " + listId);
+                            }
+                        });
+                    }
+                });
+            })
+
+        });
+    </script>
+{% endblock %}

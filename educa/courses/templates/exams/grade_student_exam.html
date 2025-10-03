@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+{% block title %}
+    Grade Student Exam
+{% endblock %}
+{% block content %}
+    <div class="module">
+        {% if messages %}
+        	<div class="messages">
+                {% for message in messages %}
+                	<div class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-warning{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        <h1>Grade Student Exam</h1>
+
+        <div class="exam-info">
+            <h3>Exam: {{ exam.title }}</h3>
+            <p><strong>Student: </strong>{{ attempt.student.first_name }} {{ attempt.student.last_name }}</p>
+        </div>
+
+        <form method="POST">
+            {% csrf_token %}
+
+            <div class="student-answers">
+                <h3>Student Answers</h3>
+
+                {% for answer in attempt.answers.all %}
+                    <div class="question-answer-container">
+                        <div class="question {% if answer.question.question_type == 'ESSAY' %} essay-question{% endif %}">
+                            <h4>Question {{ forloop.counter }}:</h4>
+                            <p>{{ answer.question.text }}</p>
+                            <p class="question-score">Max score: {{ answer.question.score }}</p>
+                        </div>
+
+                        <div class="student-answer">
+                            <h5>Student's Answer:</h5>
+                            {% if answer.question.question_type == 'MCQ' %}
+                                <p>Selected: {{ answer.selected_answer.text }}</p>
+                                <p>Correct answer:
+                                    {% for correct_answer in answer.question.answers.all %}
+                                        {% if correct_answer.is_correct %}
+                                            {{ correct_answer.text }}
+                                        {% endif %}
+                                    {% endfor %}
+                                </p>
+                                <p>Status:
+                                    {% if answer.is_correct %}
+                                        <span class="badge badge-success">Correct</span>
+                                    {% else %}
+                                        <span class="badge badge-danger">Wrong</span>
+                                    {% endif %}
+                                </p>
+                                <div class="grading-controls">
+                                    <label for="score_{{ answer.id }}">Score:</label>
+                                    <div class="readonly-input-container">
+                                        <input type="number" name="score_{{ answer.id }}" id="score_{{ answer.id }}"
+                                           min="0" max="{{ answer.question.score }}" step="0.1"
+                                           value="{% if answer.is_correct %}{{ answer.question.score }}{% else %}0{% endif %}"
+                                           class="form-control" readonly title="Score is automatically calculated based on the selected answer.">
+                                    </div>
+                                    <label for="feedback_{{ answer.id }}">Feedback:</label>
+                                    <textarea name="feedback_{{ answer.id }}" id="feedback_{{ answer.id }}"
+                                              rows="3" class="form-control">{{ answer.feedback|default:'' }}</textarea>
+                                </div>
+                            {% elif answer.question.question_type == 'TF' %}
+                                <p>Selected: {{ answer.boolean_answer|yesno:"True,False" }}</p>
+                                <p>Correct answer: {{ answer.question.is_true|yesno:"True,False" }}</p>
+                                <p>Status:
+                                    {% if answer.is_correct %}
+                                        <span class="badge badge-success">Correct</span>
+                                    {% else %}
+                                        <span class="badge badge-danger">Wrong</span>
+                                    {% endif %}
+                                </p>
+                                <div class="grading-controls">
+                                    <label for="score_{{ answer.id }}">Score:</label>
+                                    <div class="readonly-input-container">
+                                        <input type="number" name="score_{{ answer.id }}" id="score_{{ answer.id }}"
+                                           min="0" max="{{ answer.question.score }}" step="0.1"
+                                           value="{% if answer.is_correct %}{{ answer.question.score }}{% else %}0{% endif %}"
+                                           class="form-control" readonly title="This score is automatically calculated based on the selected answer.">
+                                    </div>
+                                    <label for="feedback_{{ answer.id }}">Feedback:</label>
+                                    <textarea name="feedback_{{ answer.id }}" id="feedback_{{ answer.id }}"
+                                              rows="3" class="form-control">{{ answer.feedback|default:'' }}</textarea>
+                                </div>
+                            {% elif answer.question.question_type == 'ESSAY' %}
+                                <div class="essay-response">
+                                    <p>{{ answer.essay_answer|linebreaks }}</p>
+                                    {% if answer.uploaded_file %}
+                                        <p><strong>Uploaded file:</strong> <a href="{{ answer.uploaded_file.url }}"
+                                                                              target="_blank">{{ answer.uploaded_file.name }}</a>
+                                        </p>
+                                    {% endif %}
+                                </div>
+
+                                <div class="grading-controls">
+                                    <label for="score_{{ answer.id }}">Score:</label>
+                                    <input type="number" name="score_{{ answer.id }}" id="score_{{ answer.id }}"
+                                           min="0" max="{{ answer.question.score }}" step="0.1"
+                                           value="{{ answer.awarded_score|default:0 }}" class="form-control">
+                                    <label for="feedback_{{ answer.id }}">Feedback:</label>
+                                    <textarea name="feedback_{{ answer.id }}" id="feedback_{{ answer.id }}"
+                                              rows="3" class="form-control">{{ answer.feedback|default:'' }}</textarea>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% empty %}
+                    <p>No answers were submitted for this exam.</p>
+                {% endfor %}
+            </div>
+
+            <div class="overall-feedback">
+                <h3>Overall Feedback</h3>
+                <textarea name="instructor_feedback" rows="5"
+                          class="form-control">{{ attempt.instructor_feedback|default:'' }}</textarea>
+            </div>
+
+            <div class="total-score">
+                <h3>Total Score</h3>
+                <div class="readonly-input-container">
+                    <input type="number" name="total_score" id="total_score" min="0" max="{{ exam.total_score }}" step="0.1"
+                       value="{{ attempt.score|default:0 }}" class="form-control" readonly>
+                </div>
+                <p class="help-text">Maximum score: {{ exam.total_score }}</p>
+            </div>
+
+            <div class="form-actions">
+                <a href="{% url 'grade_management_console' course_id exam.id %}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" name="save_grades" class="btn btn-primary">Save Grades</button>
+                <button type="submit" name="finalize" class="btn btn-success">Finalize Grades</button>
+            </div>
+        </form>
+    </div>
+    <script>
+
+        const scoreInputs = document.querySelectorAll('input[id^="score_"]');
+        const totalScoreInput = document.getElementById('total_score');
+
+        function updateTotalScore() {
+            let totalScore = 0;
+            scoreInputs.forEach(input => {
+                const score = parseFloat(input.value) || 0;
+                totalScore += score;
+            });
+
+            totalScoreInput.value = totalScore.toFixed(1);
+        }
+
+        scoreInputs.forEach(input => {
+            input.addEventListener('input', updateTotalScore);
+        });
+
+        updateTotalScore();
+
+    </script>
+{% endblock %}

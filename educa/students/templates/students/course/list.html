@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}My Courses{% endblock %}
+{% block content %}
+    <h1>My courses</h1>
+    <div class="student-courses-container">
+        {% if enrollments %}
+            {% regroup enrollments by course.subject as subject_list %}
+
+            {% for subject in subject_list %}
+                <div class="subject-section">
+                    <h2 class="subject-title">{{ subject.grouper.title }}</h2>
+
+                    <div class="course-grid">
+                        {% for enrollment in subject.list %}
+                            <div class="course-card {% if enrollment.academic_year.is_current %}current-course{% endif %}">
+                                <div class="course-header">
+                                    <h3>{{ enrollment.course.title }}</h3>
+                                    <div class="course-meta">
+                                        <div class="academic-year">
+                                            <i class="fas fa-calendar-alt"></i> {{ enrollment.academic_year.name }}
+                                        </div>
+                                        <div class="subject-badge">
+                                            <i class="fas fa-book"></i> {{ enrollment.course.subject.title }}
+                                        </div>
+                                        <div class="completion-badge">
+                                            {% if enrollment.completion_status %}
+                                                <span class="badge badge-success">
+                                                    <i class="fas fa-check-circle"></i> Completed
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="course-actions">
+                                        <a href="{% url 'student_course_detail' enrollment.course.id %}" class="btn {% if enrollment.academic_year.is_current %}btn-primary{% else %}btn-secondary{% endif %}">
+                                            <i class="fas fa-book-open"></i> View Course
+                                        </a>
+                                        <a href="{% url 'student_exam_list' enrollment.course.id %}" class="btn btn-secondary">
+                                            <i class="fas fa-file-alt"></i> Access Exams
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <p>You are not enrolled in any courses yet.</p>
+                <a href="{% url 'course_list' %}" class="action-button primary">Browse courses</a>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

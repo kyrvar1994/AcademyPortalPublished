@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% block title %}
+    Exam Management Dashboard
+{% endblock %}
+{% block content %}
+    <div class="container">
+        <div class="module exam-console">
+
+            <h2>Exam Management Dashboard</h2>
+
+            <div class="exam-status-card">
+                <h3>Exams for {{ course_title }}</h3>
+                <p>Manage your course exams from this dashboard.</p>
+            </div>
+
+            <div class="section-header">
+                <h3>Available Exams {{ current_year.name }}</h3>
+            </div>
+
+
+            {% if current_year_exams %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>Exam Title</th>
+                            <th>Exam Date</th>
+                            <th>Status</th>
+                            <th colspan="4">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for exam in current_year_exams %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'exam_add_questions' course_id exam.id %}">
+                                        {{ exam.title }}
+                                        {% if  not exam.is_active %}
+                                            <span class="badge badge-warning">Disabled</span>
+                                        {% endif %}
+                                    </a>
+                                </td>
+                                <td>{{ exam.start_time }}</td>
+                                <td>
+                                    {% if exam.is_graded %}
+                                        <span class="badge badge-success">Graded</span>
+                                    {% else %}
+                                        <span class="badge badge-warning">Ungraded</span>
+                                    {% endif %}
+                                </td>
+                                <td><a href="{% url 'exam_update' course_id exam.id %}" class="btn btn-sm btn-primary">Edit</a>
+                                </td>
+                                <td><a href="{% url 'exam_delete' course_id exam.id %}" class="btn btn-sm btn-danger">Delete</a>
+                                </td>
+                                <td><a href="{% url 'grade_management_console' course_id exam.id %}"
+                                       class="btn btn-sm btn-secondary">Grade</a></td>
+                                <td><a href="{% url 'exam_analytics' course_id exam.id %}" class="btn btn-sm btn-secondary">View Analytics</a></td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="no-data-message">
+                    <p>There are no exams for the current academic year.</p>
+                </div>
+            {% endif %}
+
+            {% if previous_years_exams %}
+            	<div class="section-header mt-4">
+                    <button  id="togglePreviousYearsBtn" class="btn btn-secondary" type="button">
+                        Show Previous Years' Exams <i class="fas fa-chevron-down toggle-icon"></i>
+                    </button>
+                </div>
+
+                <div id="previousYearsExams" style="display: none;">
+                    {% for year, exams in previous_years_exams.items %}
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                <h4>{{ year.name }} Academic Year</h4>
+                            </div>
+
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table">
+                                        <thead>
+                                        <tr>
+                                            <th>Exam Title</th>
+                                            <th>Exam Date</th>
+                                            <th>Status</th>
+                                            <th colspan="4">Actions</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for exam in exams %}
+                                            	<tr>
+                                                    <td>
+                                                        <a href="{% url 'exam_add_questions' course_id exam.id %}">
+                                                            {{ exam.title }}
+                                                            {% if not exam.is_active %}
+                                                            	<span class="badge badge-warning">Disabled</span>
+                                                            {% endif %}
+                                                        </a>
+                                                    </td>
+                                                    <td>{{ exam.start_time }}</td>
+                                                    <td>
+                                                        {% if exam.is_graded %}
+                                                        	<span class="badge badge-success">Graded</span>
+                                                        {% else %}
+                                                            <span class="badge badge-warning">Ungraded</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        <a href="{% url 'exam_update' course_id exam.id %}" class="btn btn-sm btn-primary">Edit</a>
+                                                    </td>
+                                                    <td>
+                                                        <a href="{% url 'exam_delete' course_id exam.id %}" class="btn btn-sm btn-danger">Delete</a>
+                                                    </td>
+                                                    <td>
+                                                        <a href="{% url 'grade_management_console' course_id exam.id %}" class="btn btn-sm btn-secondary">Grade</a>
+                                                    </td>
+                                                    <td>
+                                                        <a href="{% url 'exam_analytics' course_id exam.id %}" class="btn btn-sm btn-secondary">View Analytics</a>
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            <div class="actions" style="padding: 0">
+                <a href="{% url 'manage_course_list' %}" class="btn btn-secondary">Return to courses</a>
+                <a href="{% url 'exam_create' course_id %}" class="btn btn-primary">Create Exam</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const toggleBtn = document.getElementById('togglePreviousYearsBtn');
+            const examsSection = document.getElementById('previousYearsExams');
+
+            if (toggleBtn && examsSection) {
+                toggleBtn.addEventListener('click', function () {
+                    const isVisible = examsSection.style.display !== 'none';
+                    examsSection.style.display = isVisible ? 'none' : 'block';
+
+                    if (isVisible) {
+                        toggleBtn.innerHTML = 'Show Previous Years\' Exams <i class="fas fa-chevron-down toggle-icon"></i>';
+                    } else {
+                        toggleBtn.innerHTML = 'Hide Previous Years\' Exams <i class="fas fa-chevron-up toggle-icon"></i>';
+                    }
+                });
+            }
+        });
+    </script>
+{% endblock %}

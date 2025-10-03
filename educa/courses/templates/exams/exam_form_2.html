@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}
+    Exam Questions
+{% endblock %}
+{% block content %}
+    <div class="container">
+        <div class="module">
+            <h2>Questions Management Console</h2>
+            {% if questions %}
+                {% for question in questions %}
+                    {% if question.question_type == "TF"%}
+                       <p>{{ question.text }} ({{ question.is_true }}) <strong>Score:</strong> {{ question.score }} points</p>
+                    {% else %}
+                        <p>{{ question.text }} <strong>Score:</strong> {{ question.score }} points</p>
+                    {% endif %}
+                    {% if question.question_type == 'ESSAY' %}
+                        <a href="{% url 'exam_edit_question_essay' course_id exam_id question.pk %}">Edit</a>
+                    {% elif question.question_type == 'MCQ' %}
+                        <ul>
+                        {% for answer in question.answers.all %}
+                            <li>{{ answer.text }} {% if answer.is_correct %}(Correct){% endif %}</li>
+                        {% endfor %}
+                        </ul>
+                        <a href="{% url 'exam_edit_question_multiple_choice' course_id exam_id question.pk %}">Edit</a>
+                    {% else %}
+                        <a href="{% url 'exam_edit_question_true_false' course_id exam_id question.pk %}">Edit</a>
+                    {% endif %}
+                    <a href="{% url 'exam_delete_essay' course_id exam_id question.pk %}">Delete</a>
+                    <hr>
+                {% endfor %}
+            {% else %}
+                There are no questions yet.
+            {% endif %}
+        </div>
+
+        <div class="actions">
+            <div class="questions-container">
+                <button type="button" id="add-question-btn" class="btn btn-primary">Add Question</button>
+                <div class="questions-dropdown">
+                    <a href="{% url 'exam_add_question_essay' course_id exam_id %}">Essay question</a>
+                    <a href="{% url 'exam_add_question_multiple_choice' course_id exam_id %}">Multiple choice question</a>
+                    <a href="{% url 'exam_add_question_true_false' course_id exam_id %}">True/False question</a>
+                </div>
+            </div>
+            <a href="{% url 'exam_manage' course_id %}" class="btn btn-primary">Save</a>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load course %}
+{% block title %}
+    New Exercise
+{% endblock %}
+{% block content %}
+    <div class="module">
+        <h2>New Exercise</h2>
+        <form method="post" enctype="multipart/form-data"
+              style="display: flex; flex-direction: column; align-items: baseline;">
+            {% csrf_token %}
+            <div>
+                {{ form.title.label_tag }} {{ form.title }}
+                {% if form.title.errors %}
+                    <div class="errors">{{ form.title.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div>
+                {{ form.question_description.label_tag }} {{ form.question_description }}
+                {% if form.question_description.errors %}
+                    <div class="errors">{{ form.question_description.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="file-upload">
+                {{ form.question_file.label_tag }}{{ form.question_file }}
+                {% if form.question_file.errors %}
+                    <div class="errors">{{ form.question_file.errors }}</div>
+                {% endif %}
+            </div>
+
+
+            <div>
+                {{ form.duration.label_tag }}{{ form.duration }}
+                {% if form.duration.errors %}
+                    <div class="errors">{{ form.duration.errors }}</div>
+                {% endif %}
+            </div>
+            <hr>
+
+            <div>
+                {{ form.answer.label_tag }} {{ form.answer }}
+                {% if form.answer.errors %}
+                <div class="errors">{{ form.answer_description.errors }}</div>
+                {% endif %}
+            </div>
+            <div class="file-upload">
+                {{ form.answer_file.label_tag }}{{ form.answer_file }}
+                {% if form.answer_file.errors %}
+                    <div class="errors">{{ form.answer_file.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="checkbox">
+                Published: {{ form.visible }}
+                {% if form.visible.errors %}
+                    <div class="errors">{{ form.visible.errors }}</div>
+                {% endif %}
+            </div>
+
+            <input type="submit" value="Save">
+        </form>
+    </div>
+{% endblock %}

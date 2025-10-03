@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}
+    {{ course }} Exam
+{% endblock %}
+{% block content %}
+    <div class="module">
+        <table class="table">
+            <tr>
+                <th>{{ course }} Exam</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th></th>
+            </tr>
+            {% for item in exam_items %}
+                <tr>
+                    <td>{{ item.exam.title }}</td>
+                    <td>{{ item.exam.start_time|date:"d/m/Y H:i" }} → {{ item.exam.end_time|date:"d/m/Y H:i" }}</td>
+                    <td><span class="badge bg-{{ item.status_style }}">{{ item.status }}</span></td>
+                    <td><a href="{% url 'student_exam_detail' course.id item.exam.id %}">Access</a></td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="4">No exams yet.</td>
+                </tr>
+            {% endfor %}
+        </table>
+        <div class="form-actions">
+            <a href="{% url 'student_course_list' %}" class="btn btn-secondary">Back</a>
+        </div>
+    </div>
+{% endblock %}

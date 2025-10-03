@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}
+    {{ exercise.title }}
+{% endblock %}
+{% block content %}
+    <div class="contents">
+        <ul>
+            {% for available_exercise in available_exercises %}
+                <li>
+                    <a href="{% url 'exercise_detail' course_id module_id available_exercise.id %}">{{ available_exercise.title }}</a>
+                </li>
+            {% endfor %}
+        </ul>
+        <div>
+            {% if is_instructor %}
+                <a href="{% url 'module_content_list' course_id module_id %}">Back</a>
+            {% else %}
+                <a href="{% url 'student_course_detail_module' course_id module_id %}">Back</a>
+            {% endif %}
+
+
+        </div>
+    </div>
+    <div class="module" style="overflow: auto;">
+        <h2>Question:</h2>
+        {{ exercise.question_description }}
+        <p>Duration: {{ exercise.duration }}</p>
+        {% if exercise.question_file %}
+            Attachment: <a href="{{ exercise.question_file.url }}" target="_blank">{{ exercise.question_file }}</a>
+        {% endif %}
+        <hr>
+        {% if exercise.answer %}
+            <p>
+                <button onclick="toggleAnswer()">Show/Hide Answer</button>
+            </p>
+            <div id="answer" style="display: none;">
+                <h2>Answer:</h2>
+                <p>{{ exercise.answer }}</p>
+                {% if exercise.answer_file %}
+                    Attachment: <a href="{{ exercise.answer_file.url }}" target="_blank">{{ exercise.answer_file }}</a>
+                {% endif %}
+            </div>
+            <hr>
+        {% endif %}
+    </div>
+
+
+
+    <script>
+        function toggleAnswer() {
+            let answerDiv = document.getElementById("answer");
+            if (answerDiv.style.display === "none") {
+                answerDiv.style.display = "block";
+            } else {
+                answerDiv.style.display = "none";
+
+            }
+        }
+
+    </script>
+{% endblock %}

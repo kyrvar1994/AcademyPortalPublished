@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}
+    {{ user.get_full_name }}'s Profile
+{% endblock %}
+{% block content %}
+    <h1>My Profile</h1>
+    <div class="contents">
+        <ul>
+            <li><a href="{% url 'student_profile' %}">Personal Information</a></li>
+            <li><a href="{% url 'student_analytics' %}">My Analytics</a></li>
+            <li><a href="{% url 'student_receipts' %}">My Receipts</a></li>
+            <li><a href="{% url 'student_certificates' %}">My Certificates</a></li>
+        </ul>
+    </div>
+    <div class="box">
+        <div class="addBorder">
+            <p><span>Username: </span>{{ request.user.username }}</p>
+            <p><span>First Name: </span>{{ request.user.first_name }}</p>
+            <p><span>Last Name: </span>{{ request.user.last_name }}</p>
+            <p><span>Email: </span>{{ request.user.email }}</p>
+            <p><span>Date joined: </span>{{ request.user.date_joined }}</p>
+            <div class="profile_buttons">
+                <a href="{% url 'update_profile' %}">Edit</a>
+                <a href="{% url 'password_change' %}">Change Password</a>
+            </div>
+        </div>
+        <div class="profile_image">
+            <img src="{{ profile.image.url }}" alt="Profile Image"/>
+            <form method="post" action="{% url 'update_profile_image' %}" id="profile_image_form"
+                  enctype="multipart/form-data" style="display: none">
+                {% csrf_token %}
+                <input type="file" name="image" id="id_image"/>
+            </form>
+            <p><a href="#" id="upload_image">Edit</a></p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const editButton = document.getElementById('upload_image');
+            const fileInput = document.getElementById('id_image');
+            const form = document.getElementById('profile_image_form');
+
+            editButton.addEventListener('click', function () {
+
+                fileInput.click();
+            });
+            fileInput.addEventListener('change', function () {
+                if (fileInput.files.length > 0) {
+                    form.submit();
+                }
+
+            });
+        });
+    </script>
+{% endblock %}

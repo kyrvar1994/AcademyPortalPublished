@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+{% load course %}
+{% block title %}
+    Exam Analytics
+{% endblock %}
+{% block content %}
+    <h2>Exam Analytics for {{ exam.title }}</h2>
+
+    {% if avg_score is not None %}
+        <div class="performance-overview">
+            <h3>Performance Overview</h3>
+
+            <div class="overview-cards">
+                <div class="overview-card">
+                    <h4>Average Score</h4>
+                    <p class="metric">{{ avg_score|floatformat:1 }} / {{ exam.total_score }}</p>
+                    <p class="percentage">({{ avg_score|div:exam.total_score|mul:100|floatformat:1 }}%)</p>
+                    <canvas id="avg-score-chart"></canvas>
+                </div>
+
+                <div class="overview-card">
+                    <h4>Highest Score</h4>
+                    <p class="metric">{{ max_score|floatformat:1 }} / {{ exam.total_score }}</p>
+                    <p class="percentage">({{ max_score|div:exam.total_score|mul:100|floatformat:1 }}%)</p>
+                    <canvas id="highest-score-chart"></canvas>
+                </div>
+
+                <div class="overview-card">
+                    <h4>Lowest Score</h4>
+                    <p class="metric">{{ min_score|floatformat:1 }} / {{ exam.total_score }}</p>
+                    <p class="percentage">({{ min_score|div:exam.total_score|mul:100|floatformat:1 }}%)</p>
+                    <canvas id="lowest-score-chart"></canvas>
+                </div>
+
+                <div class="overview-card">
+                    <h4>Pass Rate</h4>
+                    <p class="metric">{{ pass_rate|floatformat:1 }}%</p>
+                    <p class="sub-text">Passing score: {{ passing_score }}</p>
+                    <canvas id="pass-rate-chart"></canvas>
+                </div>
+
+
+            </div>
+            <div class="score-distribution">
+                <h4>Score Distribution</h4>
+                <div class="distribution-chart">
+
+                    {% for range, count in score_ranges.items %}
+                        <div class="distribution-bar" data-count="{{ count }}">
+                            <div class="bar-label">{{ range }}</div>
+                            <div class="bar" style="height: 0px;"></div>
+                            <span class="bar-value">{{ count }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="question-analysis">
+                <h4>Question Analysis</h4>
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>Question</th>
+                        <th>Avg. Score</th>
+                        <th>Performance</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        {% for question_stat in question_stats %}
+                            <tr>
+                                <td>{{ question_stat.question.text|truncatechars:50 }}</td>
+                                <td>{{ question_stat.avg_score|floatformat:1 }} / {{ question_stat.max_possible }}</td>
+                                <td>
+                                    <div class="question-stat-progress">
+                                        <div class="question-stat-progress-bar {% if question_stat.percent < 60 %}bg-danger{% elif stat.percent < 80 %}bg-warning{% else %}bg-success{% endif %}" style="width: {{ question_stat.percent }}%">{{ question_stat.percent|floatformat:1 }}%</div>"
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% else %}
+        <div class="no-analytics-message">
+            <h3>No Analytics Available</h3>
+            <p>There are currently no exam attempts recorded for this exam. Analytics will be available once students
+                start taking the exam.</p>
+            <div class="info-box">
+                <i class="fas fa-info-circle"></i>
+                <span>Analytics will include average scores, performance metrics, and detailed question analysis once students complete the exam.</span>
+            </div>
+        </div>
+    {% endif %}
+    
+{% endblock %}
+{% block include_js %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const avgScore = {{ avg_score|floatformat:2 }};
+        const totalScore = {{ exam.total_score|floatformat:2 }};
+        const highestScore = {{ max_score|floatformat:2}};
+        const lowestScore = {{ min_score|floatformat:2 }};
+        const pass_rate = {{ pass_rate|floatformat:2 }};
+
+        const pieChartOption = {
+            responsive: true,
+            maintainAspectRatio: true,
+            cutout: '60%',
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    enabled: true,
+                    callbacks: {
+                        label: function (context) {
+                            return context.label + ': ' + context.raw + ' points';
+                        }
+                    }
+                }
+            },
+            animation: {
+                animateScale: true,
+                animateRotate: true
+            }
+        };
+
+        new Chart(document.getElementById('avg-score-chart'), {
+            type: 'pie',
+            data: {
+                labels: ['Achieved', 'Remaining'],
+                datasets: [
+                    {
+                        data: [avgScore, totalScore - avgScore],
+                        backgroundColor: ['#4e73df', '#f0f0f0']
+                    }
+                ]
+            },
+            options: pieChartOption
+        });
+
+        new Chart(document.getElementById('highest-score-chart'), {
+            type: 'pie',
+            data: {
+                labels: ['Achieved', 'Remaining'],
+                datasets: [
+                    {
+                        data: [highestScore, totalScore - highestScore],
+                        backgroundColor: ['#4e73df', '#f0f0f0']
+                    }
+                ]
+            },
+            options: pieChartOption
+        });
+
+        new Chart(document.getElementById('lowest-score-chart'), {
+            type: 'pie',
+            data: {
+                labels: ['Achieved', 'Remaining'],
+                datasets: [
+                    {
+                        data: [lowestScore, totalScore - lowestScore],
+                        backgroundColor: ['#4e73df', '#f0f0f0']
+                    }
+                ]
+            },
+            options: pieChartOption
+        });
+
+        new Chart(document.getElementById('pass-rate-chart'), {
+            type: 'pie',
+            data: {
+                labels: ['Passed', 'Failed'],
+                datasets: [
+                    {
+                        data: [pass_rate, 100 - pass_rate],
+                        backgroundColor: ['#1cc88a', '#e74a3b']
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                cutout: '60%',
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                return context.label + ': ' + context.raw + ' %';
+                            }
+                        }
+                    }
+                },
+                animation: {
+                    animateScale: true,
+                    animateRotate: true
+                }
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const bars = document.querySelectorAll('.distribution-bar');
+
+            let totalCount = 0;
+            bars.forEach(bar => {
+                totalCount += parseInt(bar.getAttribute('data-count') || 0);
+            });
+
+            bars.forEach(bar => {
+                const count = parseInt(bar.getAttribute('data-count') || 0);
+                const barElement = bar.querySelector('.bar');
+                const valueElement = bar.querySelector('.bar-value');
+
+                if (count > 0 && totalCount > 0) {
+                    const percentage = (count / totalCount) * 100;
+                    const height = 20 + (percentage * 1.8);
+
+                    barElement.style.height = `${height}px`;
+                    valueElement.textContent = `${count} (${percentage.toFixed(1)}%)`;
+                } else {
+                    barElement.classList.add('empty-bar');
+                    valueElement.textContent = '0 (0%)';
+                }
+            });
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}
+	Payment Canceled
+{% endblock %}
+{% block content %}
+    <div class="payment-canceled">
+        <h1><i class="fas fa-times-circle text-danger"></i> Payment Canceled</h1>
+        <p>Your payment has been canceled. You have not been enrolled in any courses.</p>
+        <div class="actions">
+            <a href="{% url 'student_enrollment' %}" class="btn btn-primary">
+                <i class="fas fa-redo"></i> Try Again
+            </a>
+            <a href="{% url 'student_course_list' %}" class="btn btn-secondary">
+                <i class="fas fa-book"></i> My Courses
+            </a>
+        </div>
+    </div>
+{% endblock %}

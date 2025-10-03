@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}
+    {{ object.title }}
+{% endblock %}
+
+{% block breadcrumbs %}
+    {% for crumb in breadcrumbs %}
+        {% if not forloop.last %}
+            <li><a href="{{ crumb.url }}">{{ crumb.name }}</a></li>
+        {% else %}
+            <li class="active">{{ crumb.name }}</li>
+        {% endif %}
+    {% endfor %}
+{% endblock %}
+
+
+{% block content %}
+    {% with subject=object.subject %}
+        <h1>
+            {{ object.title }}
+        </h1>
+        <div class="module">
+            <h2>Overview</h2>
+            <p>
+                <a href="{% url 'course_list_subject' subject.slug %}">
+                    {{ subject.title }}</a>.
+                {{ object.modules.count }} modules.
+                Instructor: {{ owners_list }}
+            </p>
+            {{ object.overview|linebreaks }}
+            {% if request.user.is_authenticated and request.user in object.owners.all or request.user.is_superuser %}
+                <form action="{% url 'manage_course_list' %}" method="get">
+                    <input type="submit" value="Manage course">
+                </form>
+{#            {% endif %}#}
+            {% elif should_enroll %}
+                <a href="{% url 'student_enrollment' %}" class="btn btn-primary">Enroll now</a>
+            {% elif not request.user.is_authenticated %}
+                <a href="{% url 'student_registration' %}" class="btn btn-primary">Register to enroll</a>
+            {% elif not is_instructor %}
+                <a href="{% url 'student_course_list' %}" class="btn btn-primary">Go to Courses</a>
+            {% endif %}
+
+        </div>
+    {% endwith %}
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}
+    Exam
+{% endblock %}
+{% block content %}
+    <div class="module">
+        {% if object %}
+            <h2>Edit Exam</h2>
+        {% else %}
+            <h2>Create Exam:</h2>
+        {% endif %}
+        <form method="POST">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div class="actions" style="padding: 0">
+                <a href="{% url 'exam_manage' course_id %}" class="btn btn-secondary">Cancel</a>
+                <input type="submit" name="save" value="Save and Exit" class="btn btn-primary">
+                <input type="submit" name="next" value="Add Questions" class="btn btn-primary">
+            </div>
+        </form>
+    </div>
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/jquery-datetimepicker@2.5.21/jquery.datetimepicker.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-datetimepicker@2.5.21/build/jquery.datetimepicker.full.min.js"></script>
+    <script>
+        $(function () {
+            $('.datetimepicker').datetimepicker({
+                format: 'd-m-Y H:i',
+                step: 15,
+                timepicker: true
+            });
+        });
+    </script>
+{% endblock %}

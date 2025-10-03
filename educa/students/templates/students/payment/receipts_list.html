@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block title %}
+	My Payment Receipts
+{% endblock %}
+{% block content %}
+	<h1>My Payment Receipts</h1>
+
+    {% if transactions %}
+    	<div class="receipts-list">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Receipt #</th>
+                        <th>Date</th>
+                        <th>Courses</th>
+                        <th>Amount</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in transactions %}
+                    	<tr>
+                            <td>{{ transaction.receipt_number }}</td>
+                            <td>{{ transaction.payment_date|date:"d/m/Y" }}</td>
+                            <td>
+                                {% for payment in transaction.payments.all %}
+                                	{{ payment.enrollment.course.title }}{% if not forloop.last %}, {% endif %}
+                                {% endfor %}
+                            </td>
+                            <td>{{ transaction.total_amount }}€</td>
+                            <td>
+                                <a href="{% url 'payment_receipt' transaction.id %}" class="btn btn-sm" style="color: #3fad37;">
+                                    <i class="fas fa-receipt"></i> View Receipt
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <p>You don't have any payment receipts yet.</p>
+        </div>
+    {% endif %}
+{% endblock %}

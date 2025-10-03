@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% load course %}
+{% block title %}
+    {{ exam.title }}
+{% endblock %}
+{% block content %}
+    <div class="module">
+        <form method="POST" enctype="multipart/form-data" id="examForm">
+            {% csrf_token %}
+
+            <div class="exam-progress">
+                <div class="progress-bar">
+                    <div class="progress" style="width: {{ current_progress }}%"></div>
+                </div>
+                <div class="progress-text">
+                    Question {{ current_question_index }} of {{ total_questions }}
+                </div>
+            </div>
+
+            <div class="question-container">
+                {% if current_question %}
+                    <div class="question-item">
+                        <h3>Question {{ current_question_index }}</h3>
+                        <div class="question-text">
+                            <p>{{ current_question.text }} ({{ current_question.score }} points)</p>
+                        </div>
+
+                        <div class="question-answer">
+                            {% if current_question.question_type == 'MCQ' %}
+                                {% for answer in current_question.answers.all %}
+                                    <div class="answer-option">
+                                        <input type="radio" name="question_{{ current_question.id }}"
+                                               id="choice_{{ answer.id }}" value="{{ answer.id }}"
+                                                {% with student_answer=answers|get_item:current_question.id %}
+                                               {% if student_answer and student_answer.selected_answer.id == answer.id %}checked
+                                               {% endif %}
+                                                {% endwith %}
+                                        <label for="choice_{{ answer.id }}">{{ answer.text }}</label>
+                                    </div>
+                                {% endfor %}
+                            {% elif current_question.question_type == 'TF' %}
+                                <div class="answer-option">
+                                    <input type="radio" name="question_{{ current_question.id }}"
+                                           id="true_{{ current_question.id }}" value="True"
+                                            {% with answer=answers|get_item:current_question.id %}
+                                           {% if answer and answer.boolean_answer == True %}checked{% endif %}
+                                            {% endwith %}
+                                    <label for="true_{{ current_question.id }}">True</label>
+                                </div>
+                                <div class="answer-option">
+                                    <input type="radio" name="question_{{ current_question.id }}"
+                                           id="false_{{ current_question.id }}" value="False"
+                                            {% with answer=answers|get_item:current_question.id %}
+                                           {% if answer and answer.boolean_answer == False %}checked{% endif %}
+                                            {% endwith %}
+                                    <label for="false_{{ current_question.id }}">False</label>
+                                </div>
+                            {% elif current_question.question_type == 'ESSAY' %}
+                                {% spaceless %}
+                                    <div class="essay-answer">
+                                    <textarea name="question_{{ current_question.id }}" rows="6" class="form-control">{% with answer=answers|get_item:current_question.id %}{% if answer %}{{ answer.essay_answer }}{% endif %}{% endwith %}</textarea>
+                                        <div class="file-upload">
+                                            <p></p>
+                                            <label for="file_question_{{ current_question.id }}">Upload File
+                                                (optional)</label>
+                                            <input type="file" name="file_question_{{ current_question.id }}"
+                                                   id="file_question_{{ current_question.id }}">
+                                            {% with answer=answers|get_item:current_question.id %}
+                                                {% if answer and answer.uploaded_file %}
+                                                    <p class="file-info">Current
+                                                        file: {{ answer.uploaded_file.name }}</p>
+                                                {% endif %}
+                                            {% endwith %}
+                                        </div>
+                                    </div>
+                                {% endspaceless %}
+                            {% endif %}
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="no-questions">
+                        <p>No questions available for this exam.</p>
+                    </div>
+                {% endif %}
+            </div>
+
+
+            <div class="form-buttons">
+                {% if current_question_index > 1 %}
+                    <button type="submit" name="action" value="prev" class="btn btn-secondary">Previous</button>
+                {% endif %}
+                {% if current_question_index < total_questions %}
+                    <button type="submit" name="action" value="next" class="btn btn-primary">Next</button>
+                {% else %}
+                    <button type="submit" name="action" value="save" class="btn btn-primary">Save Temporarily</button>
+                    <button type="submit" name="action" value="submit" class="btn btn-primary">Submit Exam</button>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+    <script>
+        document.getElementById('examForm').addEventListener('submit', function () {
+            var textareas = this.querySelectorAll('textarea');
+
+            textareas.forEach(function (textarea) {
+                textarea.value = textarea.value.trim();
+            });
+        });
+
+        document.querySelectorAll('button[name="action"]').forEach(function (button) {
+            button.addEventListener('click', function (e) {
+                if (this.value === 'save' && {{ current_question_index }} >= {{ total_questions }}) {
+                    if (!confirm('Warning: This will only Save your exam, not Submit it. You will need to return and "Submit Exam" to finalize your exam. Do you want to continue with just saving?')) {
+                        e.preventDefault();
+                    }
+                } else if (this.value === 'submit') {
+                    if (!confirm('Are you sure you want to submit this exam? This action cannot be undone.')) {
+                        e.preventDefault();
+                    }
+                }
+            });
+        });
+    </script>
+{% endblock %}

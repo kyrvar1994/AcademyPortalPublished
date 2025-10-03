@@ -1,0 +1,177 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Educa{% endblock %}</title>
+    <link href="{% static "css/base.css" %}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+<div id="header">
+    <a href="/" class="logo">Educa</a>
+    <ul class="menu">
+        {% if request.user.is_authenticated %}
+            <li class="notification-dropdown">
+                <a class="dropdown" href="#">
+                    <i class="fas fa-bell notification-bell"></i>
+                    {% if unread_count > 0 %}
+                        <span class="notification-dot"></span>
+                    {% endif %}
+                </a>
+                <ul class="dropdown_menu notifications-menu">
+                    {% if unread_notifications %}
+                        {% for notification in unread_notifications %}
+                            <li class="notification-item" data-notification-id="{{ notification.id }}">
+                                <a href="
+
+                                        {% if not notification.is_read %}{{ notification.link }}{% else %}{% url 'mark_notification_read' notification.id %}{% endif %}">
+                                    {{ notification.message }}
+                                    <span class="notification-time">{{ notification.created_at|timesince }} ago</span>
+                                </a>
+                            </li>
+                        {% endfor %}
+                        {% if unread_count > 5 %}
+                            <li class="notification-item see-all">
+                                <a href="{% url 'all_notifications' %}">See all notifications ({{ unread_count }})</a>
+                            </li>
+                        {% endif %}
+                    {% else %}
+                        <li class="notification-item no-notifications">
+                            <span>No new notifications</span>
+                        </li>
+                    {% endif %}
+                </ul>
+            </li>
+
+
+
+            <li class="profile-dropdown">
+                <a class="dropdown" href="">{{ request.user.username }}</a>
+                <ul class="dropdown_menu">
+                    {% if is_instructor %}
+                        <li class="no-bullets "><a href="{% url 'manage_course_list' %}">Manage Courses</a></li>
+                    {% elif request.user.is_superuser %}
+                        <li class="no-bullets "><a href="{% url 'admin:index' %}">Admin Console</a></li>
+                        <li class="no-bullets "><a href="{% url 'manage_course_list' %}">Manage Courses</a></li>
+                    {% else %}
+                        <li class="no-bullets "><a href="{% url 'student_profile' %}">My Profile</a></li>
+                        <li class="no-bullets "><a href="{% url 'student_course_list' %}">My Courses</a></li>
+                    {% endif %}
+
+                    <li class="no-bullets ">
+                        <form action="{% url "logout" %}" method="post">
+                            <button type="submit">Sign out</button>
+                            {% csrf_token %}
+                        </form>
+                    </li>
+                </ul>
+            </li>
+        {% else %}
+            <li><a href="{% url "login" %}">Sign in</a></li>
+            <li><a href="{% url 'student_registration' %}">Register</a></li>
+        {% endif %}
+    </ul>
+</div>
+<div id="breadcrumbs">
+    <div class="container">
+        <ul class="breadcrumb">
+            {% block breadcrumbs %}
+                {% for crumb in breadcrumbs %}
+                    {% if not forloop.last %}
+                        <li><a href="{{ crumb.url }}">{{ crumb.name }}</a></li>
+                    {% else %}
+                        <li class="active">{{ crumb.name }}</li>
+                    {% endif %}
+                {% endfor %}
+            {% endblock %}
+        </ul>
+    </div>
+</div>
+<div id="content" class="{% block content_class %}block-layout{% endblock %}">
+    {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                    <span class="close-btn" onclick="this.parentElement.style.display='none';">×</span>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    {% block content %}
+    {% endblock %}
+</div>
+{% block include_js %}
+{% endblock %}
+<script>
+    document.addEventListener('DOMContentLoaded', (event) => {
+        // DOM loaded
+        {% block domready %}
+            document.querySelectorAll('.notification-item a').forEach(link => {
+                link.addEventListener('click', function (e) {
+                    e.preventDefault();
+
+                    const notificationItem = this.closest('.notification-item');
+                    const notificationLink = this.getAttribute('href');
+                    const isRead = this.href.includes('mark-read');
+                    const notificationId = isRead ?
+                        notificationLink.split('/').filter(Boolean).pop() :
+                        notificationItem.getAttribute('data-notification-id');
+                    const targetUrl = this.href;
+
+
+                    console.log(`Notification Item:`, notificationItem);
+                    console.log(`Notification Link: ${notificationLink}`);
+                    console.log(`Is Read: ${isRead}`);
+                    console.log(`Notification ID: ${notificationId}`);
+                    console.log(`Target URL: ${targetUrl}`);
+
+
+                    if (!isRead) {
+                        fetch(`/course/notifications/mark-read/${notificationId}/`, {
+                            method: 'GET',
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        })
+                            .then(response => {
+                                notificationItem.remove()
+
+                                const unreadCount = document.querySelectorAll('.notification-item').length;
+                                if (unreadCount === 0) {
+                                    const noNotifications = document.createElement('li');
+                                    noNotifications.className = 'notification-item no-notifications';
+                                    noNotifications.innerHTML = '<span>No new notifications</span>';
+                                    document.querySelector('.notifications-menu').appendChild(noNotifications);
+
+                                    const notificationDot = document.querySelector('.notification-dot');
+                                    console.log(`Notification Dot: ${notificationDot}`)
+                                    if (notificationDot) {
+                                        notificationDot.remove();
+                                    }
+                                }
+                                console.log('True');
+                                window.location.href = targetUrl;
+                            });
+                    } else {
+                        console.log('False');
+                        window.location.href = targetUrl;
+                    }
+                });
+            })
+
+            const messages = document.querySelectorAll('.alert');
+            if (messages.length > 0) {
+                setTimeout(function() {
+                    messages.forEach(function (message) {
+                        message.style.display = 'none';
+                    });
+                }, 5000);
+            }
+        {% endblock %}
+    })
+</script>
+</body>
+</html>

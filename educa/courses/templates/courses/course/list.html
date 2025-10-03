@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}
+    {% if subject %}
+        {{ subject.title }} courses
+    {% else %}
+        All courses
+    {% endif %}
+{% endblock %}
+{% block content %}
+    <div class="course-list-container">
+        <div class="contents subject-sidebar">
+            <h3 class="sidebar-title">Subjects</h3>
+            <ul class="subject-list">
+                <li {% if not subject %} class="selected" {% endif %}>
+                    <a href="{% url 'course_list' %}">
+                        <span class="subject-name"><i class="fas fa-th-list"></i> All Courses</span>
+                        <span class="count">{{ s.total_courses }}</span>
+                    </a>
+                </li>
+                {% for s in subjects %}
+                    <li {% if subject == s %} class="selected" {% endif %}>
+                        <a href="{% url 'course_list_subject' s.slug %}">
+                            <span class="subject-name"><i class="fas fa-book"></i> {{ s.title }}</span>
+                            <span class="count">{{ s.total_courses }}</span>
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="subjects">
+            {% if subject %}
+                <div class="subject">
+                    <h2 class="subject-title">{{ subject.title }}</h2>
+                    <div class="course-grid">
+                        {% for course in courses %}
+                            <div class="course-card">
+                                <div class="course-header">
+                                    <h3>
+                                        <a href="{% url 'course_detail' course.slug %}">{{ course.title }}</a>
+                                    </h3>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <p class="no-courses">No courses available for this subject yet.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% else %}
+                {% for subject in subjects %}
+                    <div class="subject">
+                        <h2 class="subject-title">{{ subject.title }}</h2>
+                        <div class="course-grid">
+                            {% for course in subject.courses.all %}
+                                <div class="course-card">
+                                    <div class="course-header">
+                                        <h3>
+                                            <a href="{% url 'course_detail' course.slug %}">{{ course.title }}</a>
+                                        </h3>
+                                    </div>
+                                </div>
+                            {% empty %}
+                                <p class="no-courses">No courses available for this subject yet.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

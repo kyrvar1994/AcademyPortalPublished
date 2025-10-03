@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}
+    All Notifications
+{% endblock %}
+{% block content %}
+    <div class="notifications-container">
+        <h2>All Notifications</h2>
+
+        {% if notifications %}
+            <div class="notification-actions">
+                <a href="{% url 'mark_all_notifications_read' %}" class="button">Mark all as read</a>
+            </div>
+
+            <ul class="notifications-list">
+                {% for notification in notifications %}
+                    <li class="notification-item {% if not notification.is_read %}unread{% endif %}">
+                        <a href="{% if notification.link %}{{ notification.link }}{% else %}{% url 'mark_notification_read' notification.id %}{% endif %}">
+                            {{ notification.message }}
+                            <span class="notification-time">{{ notification.created_at|timesince }} ago</span>
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+
+            {% include "pagination.html" with page=page_obj %}
+        {% else %}
+            <p class="no-notifications">You don't have any notifications.</p>
+        {% endif %}
+    </div>
+{% endblock %}

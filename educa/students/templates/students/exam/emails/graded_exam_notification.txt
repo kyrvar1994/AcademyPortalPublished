@@ -1,0 +1,12 @@
+YOUR EXAM HAS BEEN GRADED!
+
+Dear {{ student_name }},
+
+We are writing to inform you that your exam "{{ exam_title }}" has been graded.
+
+You can view your detailed results, including scores and feedback, by visiting your exam results page.
+
+To view your results, please visit: {{ results_url }}
+
+Best regards,
+The Education Team

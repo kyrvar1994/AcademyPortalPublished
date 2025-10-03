@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+{% load student_tags %}
+{% block title %}
+    My Analytics
+{% endblock %}
+{% block content %}
+    <h1>My Analytics</h1>
+    <div class="module">
+        <form method="get" action="{% url 'student_analytics' %}">
+            <select name="academic_year" onchange="this.form.submit()">
+                <option value="">All Years</option>
+                {% for year in academic_years %}
+                    <option value="{{ year.id }}" {% if selected_year.id == year.id %}selected{% endif %}>
+                        {{ year.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </form>
+        <br>
+    </div>
+    <div class="module">
+        <h2>Overall Statistics</h2>
+        <div class="stats-container">
+            <div class="stat-box">
+                <h3>Total Enrollments</h3>
+                <p class="stat-value">{{ overall_stats.total_enrollments }}</p>
+            </div>
+            <div class="stat-box">
+                <h3>Total Exams Taken</h3>
+                <p class="stat-value">{{ overall_stats.total_exams_taken }}</p>
+            </div>
+            <div class="stat-box">
+                <h3>Average Score</h3>
+                <p class="stat-value">{{ overall_stats.average_score|floatformat:1 }}%</p>
+            </div>
+            <div class="stat-box">
+                <h3>Completed Courses</h3>
+                <p class="stat-value">{{ overall_stats.completed_courses }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="module">
+        <h2>Academic Year Statistics</h2>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Academic Year</th>
+                    <th>Enrollments</th>
+                    <th>Exams Taken</th>
+                    <th>Average Score</th>
+                    <th>Completed Courses</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for year, stats in stats_by_year.items %}
+                	<tr class="year-row {% if selected_year.id == year.id %}selected-year{% endif %}">
+                        <td>{{ year.name }}</td>
+                        <td>{{ stats.total_enrollments }}</td>
+                        <td>{{ stats.total_exams }}</td>
+                        <td>{{ stats.average_score|floatformat:1 }}%</td>
+                        <td>{{ stats.completed_courses }}</td>
+                        <td>
+                            <button class="toggle-courses  btn-primary btn-sm" data-year="{{ year.id }}">
+                                Show Courses
+                            </button>
+                        </td>
+                    </tr>
+                    <tr class="courses-container" id="courses-{{ year.id }}" style="display: none">
+                        <td colspan="6">
+                            <div class="courses-list">
+                                <h3>Courses for {{ year.name }}</h3>
+                                <table class="inner-table">
+                                    <thead>
+                                        <tr>
+                                           <th>Course</th>
+                                            <th>Status</th>
+                                            <th>Exams</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for enrollment in enrollments_by_year|get_item:year %}
+                                        	<tr>
+                                                <td>{{ enrollment.course.title }}</td>
+                                                <td>
+                                                    {% if enrollment.completion %}
+                                                    	Completed
+                                                    {% else %}
+                                                        In Progress
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% with course_attempts=attempts_by_year_course|get_item:year|get_item:enrollment.course %}
+                                                    	{% if course_attempts %}
+                                                    		<ul class="exam-list">
+                                                                {% for attempt in course_attempts %}
+                                                                    <li>
+                                                                        <a href="{% url 'student_exam_result' attempt.enrollment.course.id  attempt.exam.id attempt.id%}" target="_blank">{{ attempt.exam.title }}</a>
+                                                                        {% if attempt.is_graded %}
+                                                                        	- <strong>Score: </strong>{{ attempt.score }}/{{ attempt.exam.total_score }}
+                                                                        {% else %}
+                                                                            - Not yet graded.
+                                                                        {% endif %}
+                                                                    </li>
+                                                                {% endfor %}
+                                                            </ul>
+                                                        {% else %}
+                                                            No exams taken.
+                                                    	{% endif %}
+                                                    {% endwith %}
+                                                </td>
+                                            </tr>
+                                        {% empty %}
+                                            <tr>
+                                                <td colspan="3">No courses found for this academic year.</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6">No statistics are available.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const toggleButtons = document.querySelectorAll('.toggle-courses');
+
+            toggleButtons.forEach(button => {
+                button.addEventListener('click', function () {
+                    const yearId = this.getAttribute('data-year');
+                    const coursesRow = document.getElementById(`courses-${yearId}`);
+
+                    if (coursesRow.style.display === 'none') {
+                        coursesRow.style.display = 'table-row';
+                        this.textContent = 'Hide Courses';
+                    } else {
+                        coursesRow.style.display = 'none';
+                        this.textContent = 'Show Courses';
+                    }
+                });
+            });
+
+            {% if selected_year %}
+            	const selectedYearCourses = document.getElementById(`courses-{{ selected_year.id }}`);
+            	if (selectedYearCourses) {
+                    selectedYearCourses.style.display = 'table-row';
+                    const button = document.querySelector(`[data-year="{{ selected_year.id }}"]`);
+                    if (button){
+                        button.textContent = 'Hide Courses';
+                    }
+                }
+            {% endif %}
+        });
+    </script>
+{% endblock %}
