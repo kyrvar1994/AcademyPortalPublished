@@ -21,9 +21,9 @@ The project includes instructors, students, courses, exams and more.
 
 5.Activate the virtual environment env using ```.\env\Scripts\activate```.
 
-5.Navigate to the project folder with the command ```cd .\educa```.
+6.Navigate to the project folder with the command ```cd .\educa```.
 
-6.Install the requirements using the command ```pip install -r requirements.txt```.
+7.Install the requirements using the command ```pip install -r requirements.txt```.
 
 _**Notes**_:
 
@@ -36,7 +36,7 @@ If you want to start from scratch, then:
 ## Configuration ##
 - - -
 
-Rename `````.env.sample`````  file to ```.env``` and change the variables:
+Rename ```.env.sample```  file to ```.env``` and change the variables:
 
 ### Django Secret Key
 - - -
@@ -60,11 +60,11 @@ It is strongly recommended to enable Stripe for the enrollments to work as inten
 
 You can create a sandbox stripe account.
 
-1.Login to Stripe Dashboard.
+1.Login to the Stripe Dashboard.
 
 2.Replace _STRIPE_SECRET_KEY_ and _STRIPE_PUBLISHABLE_KEY_ with your credentials.
 
-3.Download stripe application from the official [GitHub](https://github.com/stripe/stripe-cli/releases).
+3.Download stripe CLI from the official [GitHub](https://github.com/stripe/stripe-cli/releases).
 
 4.Unzip the file.
 
@@ -89,7 +89,7 @@ You can create a free account on [NGROK](https://dashboard.ngrok.com/signup).
 
 4.Open the cmd inside the unzipped folder.
 
-5.If it's the first time running ngrok, add the auth token.
+5.If it is your first time running ngrok on your machine, add the auth token.
 
 6.Deploy the ngrok server using the command ```ngrok http --url=Your URL Your Port```.
 
@@ -106,17 +106,27 @@ The admin panel will be available at ```http://127.0.0.1:8000/admin/```.
 
 Login using the superuser credentials you created.
 
-## Final Notes
+## First Time Setup
+- - -
+In case you have started the project from scratch, then you will need:
+1. To create a User Group named 'Instructors'
+2. To create an Academic Year and set it as active.
+
+To designate a user as an Instructor, go to the user profile and add the user to the 'Instructors' User Group.
+
+To assign a course to an Instructor, go to the course page and add the Instructor to the owner field.
+
+# Final Notes
 - - - 
 
-### Database
+## Database
 - - -
 
 The project includes an SQLite database filled with sample data and files.
 
 Feel free to create your own database and populate it with your own data.
 
-### Browser
+## Browser
 - - -
 
 I suggest using a browser that allows for multiple different identities (e.g. Ghost Browser) to avoid excessive login and logouts between different accounts.
